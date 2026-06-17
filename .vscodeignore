@@ -1,6 +1,6 @@
-node_modules/
 src/
 .vscode/
+.joycode/
 .gitignore
 tsconfig.json
 *.vsix

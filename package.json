@@ -2,7 +2,7 @@
   "name": "component-doc-preview",
   "displayName": "Component Doc Preview",
   "description": "Preview custom JSDoc Markdown blocks from the active file in the VS Code sidebar.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "local",
   "engines": {
     "vscode": "^1.85.0"
