@@ -1,0 +1,90 @@
+{
+  "name": "component-doc-preview",
+  "displayName": "Component Doc Preview",
+  "description": "Preview custom JSDoc Markdown blocks from the active file in the VS Code sidebar.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:componentDocPreview.view"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "componentDocPreview",
+          "title": "组件文档",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "componentDocPreview": [
+        {
+          "id": "componentDocPreview.view",
+          "name": "当前文件文档",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "componentDocPreview.refresh",
+        "title": "Component Doc Preview: Refresh"
+      }
+    ],
+    "configuration": {
+      "title": "Component Doc Preview",
+      "properties": {
+        "componentDocPreview.tags": {
+          "type": "array",
+          "default": [
+            "componentDoc",
+            "logicDoc"
+          ],
+          "description": "JSDoc custom tags to render as Markdown."
+        },
+        "componentDocPreview.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "description": "Delay before refreshing the preview after editing the active file."
+        },
+        "componentDocPreview.fileExtensions": {
+          "type": "array",
+          "default": [
+            ".vue",
+            ".js",
+            ".ts"
+          ],
+          "description": "File extensions that can be scanned for component documentation."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "package:vsix": "vsce package",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0"
+  },
+  "overrides": {
+    "cheerio": "1.0.0-rc.12"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.11.30",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "2.15.0",
+    "typescript": "^5.4.5"
+  }
+}
