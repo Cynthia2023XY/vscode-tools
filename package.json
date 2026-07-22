@@ -64,12 +64,28 @@
             ".ts"
           ],
           "description": "File extensions that can be scanned for component documentation."
+        },
+        "componentDocPreview.projectDocFiles": {
+          "type": "array",
+          "default": [
+            "src/main.ts",
+            "src/main.js",
+            "src/App.vue",
+            "src/extension.ts"
+          ],
+          "description": "Workspace-relative existing source files to scan for the project-level @projectDoc block. The first existing file is used."
+        },
+        "componentDocPreview.projectDocTag": {
+          "type": "string",
+          "default": "projectDoc",
+          "description": "JSDoc tag used for project-level Markdown documentation."
         }
       }
     }
   },
   "scripts": {
     "compile": "tsc -p ./",
+    "install:local": "npm run compile && vsce package --out component-doc-preview.vsix && code --install-extension component-doc-preview.vsix --force",
     "package:vsix": "vsce package",
     "watch": "tsc -watch -p ./",
     "vscode:prepublish": "npm run compile"
