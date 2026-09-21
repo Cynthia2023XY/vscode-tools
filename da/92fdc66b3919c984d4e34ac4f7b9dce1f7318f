@@ -1,0 +1,31 @@
+package-lock.json
+  s_095232a2f7930b::t_4c51fe55ec64fa 3,9
+LICENSE
+  s_095232a2f7930b::t_f25221db960dfa 1-21
+package.json
+  s_095232a2f7930b::t_331e1113bcba89 8
+  s_095232a2f7930b::t_f25221db960dfa 5
+  s_095232a2f7930b::t_c513e9046ee25f 94-95
+  s_095232a2f7930b::t_a3e288965c78dd 6
+  s_095232a2f7930b::t_8592b86b5cf7c1 9-12
+  s_095232a2f7930b::t_5beb5adf9004ed 7
+README.md
+  s_095232a2f7930b::t_f25221db960dfa 40-43,123,125
+  s_095232a2f7930b::t_5beb5adf9004ed 3,5,7-14,18,20,22,24-29,31,33,35,38-39,44-111,113,121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "da92fdc66b3919c984d4e34ac4f7b9dce1f7318f",
+  "prompts": {},
+  "sessions": {
+    "s_095232a2f7930b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0616c-0f95-7730-a127-08bb5e07b4c4",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "dingxinyi.2 <dingxinyi.2@jd.com>"
+    }
+  }
+}
