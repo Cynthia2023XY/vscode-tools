@@ -2,8 +2,14 @@
   "name": "component-doc-preview",
   "displayName": "Component Doc Preview",
   "description": "Preview custom JSDoc Markdown blocks from the active file in the VS Code sidebar.",
-  "version": "0.0.2",
-  "publisher": "local",
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon-marketplace.png",
+  "version": "0.0.3",
+  "publisher": "CynthiaDing",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cynthia2023XY/vscode-tools.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -85,8 +91,8 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
-    "install:local": "npm run compile && vsce package --out component-doc-preview.vsix && code --install-extension component-doc-preview.vsix --force",
-    "package:vsix": "vsce package",
+    "install:local": "npm run compile && vsce package --no-rewrite-relative-links --out component-doc-preview.vsix && code --install-extension component-doc-preview.vsix --force",
+    "package:vsix": "vsce package --no-rewrite-relative-links",
     "watch": "tsc -watch -p ./",
     "vscode:prepublish": "npm run compile"
   },
