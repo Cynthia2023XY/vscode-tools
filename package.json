@@ -90,6 +90,7 @@
     }
   },
   "scripts": {
+    "test": "npm run compile && node --test test/*.test.cjs",
     "compile": "tsc -p ./",
     "install:local": "npm run compile && vsce package --no-rewrite-relative-links --out component-doc-preview.vsix && code --install-extension component-doc-preview.vsix --force",
     "package:vsix": "vsce package --no-rewrite-relative-links",

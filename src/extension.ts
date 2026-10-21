@@ -33,11 +33,20 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor(() => {
       provider.refresh();
     }),
+    vscode.window.tabGroups.onDidChangeTabs(() => {
+      provider.refresh();
+    }),
+    vscode.window.tabGroups.onDidChangeTabGroups(() => {
+      provider.refresh();
+    }),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      provider.refresh();
+    }),
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((event) => {
-      /** 当前激活编辑器对应的文档 */
+      // 当前激活编辑器对应的文档
       const activeDocument = vscode.window.activeTextEditor?.document;
 
       if (activeDocument?.uri.toString() === event.document.uri.toString() || provider.isProjectDocDocument(event.document)) {
@@ -69,6 +78,9 @@ class ComponentDocViewProvider implements vscode.WebviewViewProvider {
   /** 防抖刷新定时器 */
   private refreshTimer?: NodeJS.Timeout;
 
+  /** 最近一次刷新编号, 防止异步读取旧文件后覆盖当前预览 */
+  private refreshVersion = 0;
+
   constructor(private readonly extensionUri: vscode.Uri) {}
 
   /** VS Code 创建侧边栏视图时调用, 用于初始化 Webview 能力和首屏内容 */
@@ -79,40 +91,73 @@ class ComponentDocViewProvider implements vscode.WebviewViewProvider {
   }
 
   /** 立即根据当前激活文件刷新侧边栏文档 */
-  refresh() {
+  async refresh() {
     if (!this.view) {
       return;
     }
 
-    this.configureWebview();
+    // 标记本次刷新, 文件切换后丢弃旧的读取结果
+    const refreshVersion = ++this.refreshVersion;
+    // 优先使用编辑器内容, 对比视图无激活编辑器时读取标签页对应版本
+    const document = await this.getPreviewDocument();
 
-    /** 当前激活的文本编辑器 */
-    const editor = vscode.window.activeTextEditor;
-    /** 当前配置允许扫描的文件扩展名 */
+    if (refreshVersion !== this.refreshVersion) {
+      return;
+    }
+
+    this.configureWebview(document);
+
+    // 当前配置允许扫描的文件扩展名
     const configuredFileExtensions = this.getConfiguredFileExtensions();
-    /** 当前激活文件是否属于可扫描的文件类型 */
-    const isSupportedDocument = editor ? this.isSupportedDocument(editor.document, configuredFileExtensions) : false;
-    /** 当前激活文件提取出的文档块 */
-    const docBlocks = editor && isSupportedDocument
-      ? extractDocBlocks(editor.document.getText(), {
+    // 当前激活文件是否属于可扫描的文件类型
+    const isSupportedDocument = document ? this.isSupportedDocument(document, configuredFileExtensions) : false;
+    // 当前激活文件提取出的文档块
+    const docBlocks = document && isSupportedDocument
+      ? extractDocBlocks(document.getText(), {
           tags: this.getConfiguredTags(),
-        }).map((docBlock) => this.createRenderableDocBlock(docBlock, editor.document.uri))
+        }).map((docBlock) => this.createRenderableDocBlock(docBlock, document.uri))
       : [];
-    /** 当前工作区项目级文档块 */
-    const projectDocBlocks = this.getProjectDocBlocks(editor?.document);
-    /** 当前无文档块时展示给用户的状态说明 */
-    const emptyMessage = editor && !isSupportedDocument
+    // 项目文档始终加载, 不受当前文件类型或是否打开文件影响
+    const projectDocBlocks = this.getProjectDocBlocks(document);
+    // 当前无文档块时展示给用户的状态说明
+    const emptyMessage = document && !isSupportedDocument
       ? `当前文件扩展名未启用组件文档预览, 已启用: ${configuredFileExtensions.join(', ')}`
       : undefined;
 
     this.view.webview.html = renderHtml({
       webview: this.view.webview,
-      documentUri: editor?.document.uri,
+      documentUri: document?.uri,
       docBlocks,
       projectDocBlocks,
       tags: this.getConfiguredTags(),
       emptyMessage,
     });
+  }
+
+  /** 获取当前预览文件, 对比视图默认展示修改侧并在不可读取时回退原始侧 */
+  private async getPreviewDocument() {
+    // 当前标签页决定文件归属, 避免复用其他标签页遗留的编辑器
+    const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+    // 当前真正获得焦点的文本编辑器文档
+    const activeDocument = vscode.window.activeTextEditor?.document;
+
+    if (input instanceof vscode.TabInputTextDiff) {
+      if (activeDocument && [input.original, input.modified].some((uri) => uri.toString() === activeDocument.uri.toString())) {
+        return activeDocument;
+      }
+
+      for (const uri of [input.modified, input.original]) {
+        try {
+          return await vscode.workspace.openTextDocument(uri);
+        } catch {
+          // 删除文件或暂不可用的虚拟文档尝试另一侧
+        }
+      }
+
+      return undefined;
+    }
+
+    return activeDocument;
   }
 
   /** 编辑文件时按配置防抖刷新侧边栏文档 */
@@ -130,16 +175,14 @@ class ComponentDocViewProvider implements vscode.WebviewViewProvider {
   }
 
   /** 配置 Webview 的脚本权限和本地资源访问范围 */
-  private configureWebview() {
+  private configureWebview(activeDocument = vscode.window.activeTextEditor?.document) {
     if (!this.view) {
       return;
     }
 
-    /** 当前激活编辑器对应的文档 */
-    const activeDocument = vscode.window.activeTextEditor?.document;
-    /** 当前文件所在目录, 用于允许相对图片在 Webview 中加载 */
+    // 当前文件所在目录, 用于允许相对图片在 Webview 中加载
     const activeDocumentDir = activeDocument ? vscode.Uri.file(path.dirname(activeDocument.uri.fsPath)) : undefined;
-    /** 当前工作区根目录列表, 用于允许工作区内图片资源加载 */
+    // 当前工作区根目录列表, 用于允许工作区内图片资源加载
     const workspaceRoots = vscode.workspace.workspaceFolders?.map((folder) => folder.uri) ?? [];
 
     this.view.webview.options = {
@@ -208,9 +251,11 @@ class ComponentDocViewProvider implements vscode.WebviewViewProvider {
       return [];
     }
 
-    /** 项目级文档文件中的原始 JSDoc 内容, 优先使用编辑器里的未保存内容 */
-    const projectDocSource = activeDocument?.uri.fsPath === projectDocUri.fsPath
-      ? activeDocument.getText()
+    // 项目文档优先读取工作区文件的未保存内容, 避免误用 Git 历史版本
+    const projectDocument = vscode.workspace.textDocuments.find((document) => document.uri.toString() === projectDocUri.toString());
+    // 项目级文档文件中的原始 JSDoc 内容
+    const projectDocSource = projectDocument
+      ? projectDocument.getText()
       : fs.readFileSync(projectDocUri.fsPath, 'utf8');
     /** 项目级文档中提取出的 Markdown 文档块 */
     const projectDocBlocks = extractDocBlocks(projectDocSource, {
@@ -239,11 +284,18 @@ class ComponentDocViewProvider implements vscode.WebviewViewProvider {
 
   /** 获取项目级文档应该归属的工作区 */
   private getProjectDocWorkspaceFolder(activeDocument?: vscode.TextDocument) {
-    if (activeDocument) {
-      return vscode.workspace.getWorkspaceFolder(activeDocument.uri);
+    // Git 对比文档使用实际文件路径定位工作区, 忽略版本查询参数
+    const documentUri = activeDocument?.uri.scheme === 'git'
+      ? vscode.Uri.file(activeDocument.uri.fsPath)
+      : activeDocument?.uri;
+    // 当前文件能明确归属的工作区
+    const activeWorkspaceFolder = documentUri ? vscode.workspace.getWorkspaceFolder(documentUri) : undefined;
+
+    if (activeWorkspaceFolder) {
+      return activeWorkspaceFolder;
     }
 
-    /** 当前 VS Code 打开的工作区根目录列表 */
+    // 未打开文件或打开工作区外文件时使用第一个工作区
     const workspaceFolders = vscode.workspace.workspaceFolders;
 
     if (!workspaceFolders?.length) {

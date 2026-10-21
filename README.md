@@ -63,6 +63,10 @@
 
 插件默认依次查找 `src/main.ts`、`src/main.js`、`src/App.vue`、`src/extension.ts`，**只读取第一个存在的文件**。如果项目文档写在其他文件中，请通过 `componentDocPreview.projectDocFiles` 指定该文件，并将它放在列表最前面。
 
+项目文档不受当前文件扩展名限制：打开 JSON、Markdown 等文件，或者关闭所有编辑器后，仍会展示工作区的 `@projectDoc`。当前文件不属于任何工作区时，使用第一个工作区的项目文档。
+
+Git 文件变更等文本对比视图也支持预览 `@componentDoc` / `@logicDoc`：焦点位于某一侧时展示该侧内容；没有激活文本编辑器时默认读取修改侧，修改侧不可读取时尝试原始侧。项目文档始终读取工作区当前内容，支持未保存的修改。
+
 ## Markdown 与图片
 
 文档块支持标题、列表、链接、代码块、表格和图片等 Markdown 内容。出于安全考虑，注释中的原始 HTML 不会作为 HTML 渲染。
@@ -115,6 +119,7 @@
 ```bash
 npm install
 npm run compile
+npm test
 npm run package:vsix
 ```
 
