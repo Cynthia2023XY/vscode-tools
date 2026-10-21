@@ -1,0 +1,25 @@
+src/extension.ts
+  s_5e46262ac4ade4::t_a340abafda5a98 36-44,49,81-83,94,99-108,110,112-116,118,120-123,129,137-162,178,183,185,254-258,287-295,298
+package.json
+  s_5e46262ac4ade4::t_fa1384f06708de 93
+README.md
+  s_5e46262ac4ade4::t_fa1384f06708de 66-69,122
+test/preview.test.cjs
+  s_5e46262ac4ade4::t_fa1384f06708de 1-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "b3c00d3a396d5d23c74194fd26328c29595d9db0",
+  "prompts": {},
+  "sessions": {
+    "s_5e46262ac4ade4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15d9b-db5e-70d2-81d2-9c30e06da4c8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "dingxinyi.2 <dingxinyi.2@jd.com>"
+    }
+  }
+}
